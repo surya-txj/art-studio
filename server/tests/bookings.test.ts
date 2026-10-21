@@ -31,6 +31,13 @@ describe('creating wall bookings', () => {
     });
   });
 
+  it('cannot book on behalf of another customer or set the status', async () => {
+    const t = setup();
+    const customer = await t.customer();
+    expect((await customer.post('/api/bookings').send(valid({ customerId: 999 }))).status).toBe(400);
+    expect((await customer.post('/api/bookings').send(valid({ status: 'confirmed' }))).status).toBe(400);
+  });
+
   it('ignores any price the client tries to send (rejected as an unknown field)', async () => {
     const t = setup();
     const customer = await t.customer();
