@@ -31,11 +31,17 @@ export function AccountPage() {
 
   return (
     <section>
-      <h1>My account</h1>
+      <p className="eyebrow">Your account</p>
+      <h1>My orders and requests</h1>
       {flash && !action.feedback && <Success>{flash}</Success>}
       <FeedbackMessage feedback={action.feedback} />
 
-      <h2>Painting orders</h2>
+      <div className="section-head">
+        <h2>Painting orders</h2>
+        <Link to="/" className="button secondary small">
+          Browse paintings
+        </Link>
+      </div>
       <AsyncView
         {...orders}
         onRetry={orders.reload}
@@ -47,6 +53,7 @@ export function AccountPage() {
         }
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -60,7 +67,7 @@ export function AccountPage() {
             <tbody>
               {d.orders.map((o) => (
                 <tr key={o.id}>
-                  <td>
+                  <td className="wrap">
                     <Link to={`/paintings/${o.paintingId}`}>{o.paintingTitle}</Link>
                   </td>
                   <td>{formatMoney(o.price)}</td>
@@ -72,7 +79,7 @@ export function AccountPage() {
                     {o.status === 'placed' && (
                       <button
                         type="button"
-                        className="danger"
+                        className="danger small"
                         disabled={action.pending === `order-${o.id}`}
                         onClick={() => cancel('order', o.id, orders.reload)}
                       >
@@ -84,10 +91,16 @@ export function AccountPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
 
-      <h2>Wall bookings</h2>
+      <div className="section-head">
+        <h2>Wall bookings</h2>
+        <Link to="/wall-booking" className="button secondary small">
+          Book a wall
+        </Link>
+      </div>
       <AsyncView
         {...bookings}
         onRetry={bookings.reload}
@@ -99,6 +112,7 @@ export function AccountPage() {
         }
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -127,7 +141,7 @@ export function AccountPage() {
                       {active && !tooLate && (
                         <button
                           type="button"
-                          className="danger"
+                          className="danger small"
                           disabled={action.pending === `booking-${b.id}`}
                           onClick={() => cancel('booking', b.id, bookings.reload)}
                         >
@@ -143,10 +157,16 @@ export function AccountPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
 
-      <h2>Pottery requests</h2>
+      <div className="section-head">
+        <h2>Pottery requests</h2>
+        <Link to="/pottery/new" className="button secondary small">
+          Request pottery
+        </Link>
+      </div>
       <AsyncView
         {...pottery}
         onRetry={pottery.reload}
@@ -158,6 +178,7 @@ export function AccountPage() {
         }
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -179,27 +200,30 @@ export function AccountPage() {
                   <td>
                     <StatusBadge status={r.status} />
                   </td>
-                  <td className="row">
-                    {r.status === 'requested' && (
-                      <>
-                        <Link className="button secondary" to={`/pottery/${r.id}/edit`}>
-                          Edit
-                        </Link>
-                        <button
-                          type="button"
-                          className="danger"
-                          disabled={action.pending === `pottery-${r.id}`}
-                          onClick={() => cancel('pottery', r.id, pottery.reload)}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    )}
+                  <td>
+                    <div className="row">
+                      {r.status === 'requested' && (
+                        <>
+                          <Link className="button secondary small" to={`/pottery/${r.id}/edit`}>
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            className="danger small"
+                            disabled={action.pending === `pottery-${r.id}`}
+                            onClick={() => cancel('pottery', r.id, pottery.reload)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
     </section>

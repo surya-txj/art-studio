@@ -28,20 +28,25 @@ export function PaintingDetailPage() {
 
   return (
     <section>
-      <p>
-        <Link to="/">← All paintings</Link>
-      </p>
+      <Link to="/" className="back-link">
+        ← All paintings
+      </Link>
       <AsyncView {...painting} onRetry={painting.reload}>
         {({ painting: p }) => (
           <article className="detail">
-            {p.imageUrl ? <img src={p.imageUrl} alt={p.title} /> : <div className="img-placeholder">No image</div>}
-            <div>
+            <div className="detail-frame">
+              {p.imageUrl ? <img src={p.imageUrl} alt={p.title} /> : <div className="img-placeholder">No image</div>}
+            </div>
+            <div className="detail-info">
+              <p className="eyebrow">Original painting · {p.id}</p>
               <h1>{p.title}</h1>
-              <p className="muted">by {p.artist}</p>
-              <p>{p.description}</p>
-              <p className="price">
-                {formatMoney(p.price)} <StatusBadge status={p.status} />
-              </p>
+              <p className="artist">by {p.artist}</p>
+              <p className="description">{p.description}</p>
+
+              <div className="price-box">
+                <span className="price">{formatMoney(p.price)}</span>
+                <StatusBadge status={p.status} />
+              </div>
 
               <FeedbackMessage feedback={action.feedback} />
 
@@ -50,11 +55,11 @@ export function PaintingDetailPage() {
                   <Link to="/login" state={{ from: `/paintings/${p.id}` }}>
                     Log in
                   </Link>{' '}
-                  as a customer to buy this painting.
+                  or <Link to="/register">create an account</Link> to buy this painting.
                 </p>
               )}
               {user?.role === 'customer' && p.status === 'available' && (
-                <button type="button" onClick={() => buy(p)} disabled={action.pending === 'buy'}>
+                <button type="button" className="large" onClick={() => buy(p)} disabled={action.pending === 'buy'}>
                   {action.pending === 'buy' ? 'Placing order…' : 'Buy this painting'}
                 </button>
               )}
@@ -69,6 +74,7 @@ export function PaintingDetailPage() {
               {user?.role === 'studio' && p.status === 'sold' && (
                 <p className="muted">Sold paintings cannot be edited.</p>
               )}
+              <p className="muted">Each painting is one of a kind. No online payment: buying places an order with the studio.</p>
             </div>
           </article>
         )}

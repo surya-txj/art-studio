@@ -17,6 +17,7 @@ export function WallBookingPage() {
 
   return (
     <section className="narrow">
+      <p className="eyebrow">Wall painting</p>
       <h1>Book a wall painting</h1>
       <AsyncView {...info} onRetry={info.reload}>
         {(d) => <BookingForm studio={d.studio} takenDates={d.takenDates} onBooked={info.reload} />}
@@ -81,20 +82,35 @@ function BookingForm({
           <Link to="/account">View my bookings</Link>
         </Success>
       )}
-      <form onSubmit={onSubmit} className="form">
-        <label>
-          Date
-          <input
-            type="date"
-            value={date}
-            min={rules.earliestDate}
-            max={rules.latestDate}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            aria-describedby="date-help"
-          />
-        </label>
-        <span id="date-help" className={dateTaken ? 'field-error' : 'muted'}>
+      <form onSubmit={onSubmit} className="form panel">
+        <div className="form-grid">
+          <label>
+            Date
+            <input
+              type="date"
+              value={date}
+              min={rules.earliestDate}
+              max={rules.latestDate}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              aria-describedby="date-help"
+            />
+          </label>
+          <label>
+            <span>Wall size <span className="hint">sq ft, {rules.minWallSqft}–{rules.maxWallSqft}</span></span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={rules.minWallSqft}
+              max={rules.maxWallSqft}
+              step={1}
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+              required
+            />
+          </label>
+        </div>
+        <span id="date-help" className={dateTaken ? 'field-error' : 'hint'}>
           {dateTaken
             ? 'This date is already booked. Please choose another date.'
             : takenDates.length > 0
@@ -102,29 +118,22 @@ function BookingForm({
               : 'No dates are booked yet.'}
         </span>
         <label>
-          Wall size (sq ft, {rules.minWallSqft}–{rules.maxWallSqft})
-          <input
-            type="number"
-            inputMode="numeric"
-            min={rules.minWallSqft}
-            max={rules.maxWallSqft}
-            step={1}
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Address
+          Service address
           <textarea value={address} onChange={(e) => setAddress(e.target.value)} required maxLength={500} rows={3} />
         </label>
-        <p>
-          Estimated price:{' '}
-          <strong>{sizeValid ? formatMoney(sizeNumber * studio.muralRatePerSqFt) : '—'}</strong>{' '}
-          <span className="muted">(the server calculates the final price)</span>
-        </p>
+        <div className="summary">
+          <span>
+            Estimated price
+            <br />
+            <span className="hint">
+              {sizeValid ? `${sizeNumber} sq ft × ${formatMoney(studio.muralRatePerSqFt)}` : 'Enter a wall size'} · the
+              final price is calculated when you submit
+            </span>
+          </span>
+          <strong>{sizeValid ? formatMoney(sizeNumber * studio.muralRatePerSqFt) : '—'}</strong>
+        </div>
         {error && <ErrorBox message={error} />}
-        <button type="submit" disabled={submitting || dateTaken}>
+        <button type="submit" className="large" disabled={submitting || dateTaken}>
           {submitting ? 'Booking…' : 'Request booking'}
         </button>
       </form>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { Booking, Order, Painting, PotteryRequest } from '../api/types';
 import { FeedbackMessage } from '../components/Layout';
-import { AsyncView, StatusBadge } from '../components/Status';
+import { AsyncView, ErrorBox, StatusBadge } from '../components/Status';
 import { useAction } from '../hooks/useAction';
 import { useAsync } from '../hooks/useAsync';
 import { formatDate, formatMoney } from '../lib/format';
@@ -13,18 +13,46 @@ type Tab = 'bookings' | 'pottery' | 'orders' | 'paintings';
 /** Studio (admin) dashboard: review everything and make decisions. */
 export function StudioDashboardPage() {
   const [tab, setTab] = useState<Tab>('bookings');
-  const tabs: [Tab, string][] = [
-    ['bookings', 'Wall bookings'],
-    ['pottery', 'Pottery requests'],
-    ['orders', 'Orders'],
-    ['paintings', 'Paintings'],
+  // Counts for the summary tiles. Re-fetched whenever the tab changes, so
+  // decisions made on a tab are reflected when you switch.
+  const summary = useAsync(async () => {
+    const [b, r, o, p] = await Promise.all([
+      api<{ bookings: Booking[] }>('/bookings'),
+      api<{ requests: PotteryRequest[] }>('/pottery-requests'),
+      api<{ orders: Order[] }>('/orders'),
+      api<{ paintings: Painting[] }>('/paintings'),
+    ]);
+    return {
+      pendingBookings: b.bookings.filter((x) => x.status === 'requested').length,
+      pendingPottery: r.requests.filter((x) => x.status === 'requested').length,
+      placedOrders: o.orders.filter((x) => x.status === 'placed').length,
+      available: p.paintings.filter((x) => x.status === 'available').length,
+    };
+  }, [tab]);
+  const s = summary.data;
+
+  const tabs: [Tab, string, number | undefined][] = [
+    ['bookings', 'Wall bookings', s?.pendingBookings],
+    ['pottery', 'Pottery requests', s?.pendingPottery],
+    ['orders', 'Orders', undefined],
+    ['paintings', 'Paintings', undefined],
   ];
 
   return (
     <section>
-      <h1>Studio dashboard</h1>
+      <p className="eyebrow">Studio</p>
+      <h1>Dashboard</h1>
+
+      {summary.error && <ErrorBox message={summary.error} onRetry={summary.reload} />}
+      <div className="stats">
+        <Stat label="Bookings awaiting a decision" value={s?.pendingBookings} highlight={!!s?.pendingBookings} />
+        <Stat label="Pottery requests awaiting a decision" value={s?.pendingPottery} highlight={!!s?.pendingPottery} />
+        <Stat label="Active painting orders" value={s?.placedOrders} />
+        <Stat label="Paintings available" value={s?.available} />
+      </div>
+
       <div className="tabs" role="tablist">
-        {tabs.map(([key, label]) => (
+        {tabs.map(([key, label, count]) => (
           <button
             key={key}
             type="button"
@@ -34,18 +62,28 @@ export function StudioDashboardPage() {
             onClick={() => setTab(key)}
           >
             {label}
+            {!!count && <span className="count" aria-label={`${count} pending`}>{count}</span>}
           </button>
         ))}
       </div>
-      {tab === 'bookings' && <BookingsReview />}
-      {tab === 'pottery' && <PotteryReview />}
+      {tab === 'bookings' && <BookingsReview onChange={summary.reload} />}
+      {tab === 'pottery' && <PotteryReview onChange={summary.reload} />}
       {tab === 'orders' && <OrdersList />}
       {tab === 'paintings' && <PaintingsManage />}
     </section>
   );
 }
 
-function BookingsReview() {
+function Stat({ label, value, highlight }: { label: string; value: number | undefined; highlight?: boolean }) {
+  return (
+    <div className={highlight ? 'stat highlight' : 'stat'}>
+      <div className="stat-value">{value ?? '–'}</div>
+      <div className="stat-label">{label}</div>
+    </div>
+  );
+}
+
+function BookingsReview({ onChange }: { onChange: () => void }) {
   const bookings = useAsync(() => api<{ bookings: Booking[] }>('/bookings'));
   const action = useAction();
 
@@ -57,6 +95,7 @@ function BookingsReview() {
       `Booking for ${formatDate(b.date)} ${decision === 'confirm' ? 'confirmed' : 'declined'}.`,
     );
     bookings.reload();
+    onChange();
   }
 
   return (
@@ -69,6 +108,7 @@ function BookingsReview() {
         empty="No wall bookings yet."
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -87,8 +127,8 @@ function BookingsReview() {
                   <td>{formatDate(b.date)}</td>
                   <td>
                     {b.customerName}
-                    <br />
-                    <span className="muted">{b.customerEmail}</span>
+                    
+                    <span className="sub">{b.customerEmail}</span>
                   </td>
                   <td>{b.wallSizeSqft} sq ft</td>
                   <td className="wrap">{b.address}</td>
@@ -96,34 +136,37 @@ function BookingsReview() {
                   <td>
                     <StatusBadge status={b.status} />
                   </td>
-                  <td className="row">
-                    {b.status === 'requested' && (
-                      <>
-                        <button type="button" disabled={action.pending !== null} onClick={() => decide(b, 'confirm')}>
-                          Confirm
-                        </button>
-                        <button
-                          type="button"
-                          className="danger"
-                          disabled={action.pending !== null}
-                          onClick={() => decide(b, 'decline')}
-                        >
-                          Decline
-                        </button>
-                      </>
-                    )}
+                  <td>
+                    <div className="row">
+                      {b.status === 'requested' && (
+                        <>
+                          <button type="button" className="small" disabled={action.pending !== null} onClick={() => decide(b, 'confirm')}>
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            className="danger small"
+                            disabled={action.pending !== null}
+                            onClick={() => decide(b, 'decline')}
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
     </>
   );
 }
 
-function PotteryReview() {
+function PotteryReview({ onChange }: { onChange: () => void }) {
   const requests = useAsync(() => api<{ requests: PotteryRequest[] }>('/pottery-requests'));
   const action = useAction();
 
@@ -135,6 +178,7 @@ function PotteryReview() {
       `Request ${decision === 'accept' ? 'accepted' : 'declined'}.`,
     );
     requests.reload();
+    onChange();
   }
 
   return (
@@ -147,6 +191,7 @@ function PotteryReview() {
         empty="No pottery requests yet."
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -164,8 +209,8 @@ function PotteryReview() {
                 <tr key={r.id}>
                   <td>
                     {r.customerName}
-                    <br />
-                    <span className="muted">{r.customerEmail}</span>
+                    
+                    <span className="sub">{r.customerEmail}</span>
                   </td>
                   <td>{r.itemName}</td>
                   <td>{r.glazeName}</td>
@@ -174,27 +219,30 @@ function PotteryReview() {
                   <td>
                     <StatusBadge status={r.status} />
                   </td>
-                  <td className="row">
-                    {r.status === 'requested' && (
-                      <>
-                        <button type="button" disabled={action.pending !== null} onClick={() => decide(r, 'accept')}>
-                          Accept
-                        </button>
-                        <button
-                          type="button"
-                          className="danger"
-                          disabled={action.pending !== null}
-                          onClick={() => decide(r, 'decline')}
-                        >
-                          Decline
-                        </button>
-                      </>
-                    )}
+                  <td>
+                    <div className="row">
+                      {r.status === 'requested' && (
+                        <>
+                          <button type="button" className="small" disabled={action.pending !== null} onClick={() => decide(r, 'accept')}>
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            className="danger small"
+                            disabled={action.pending !== null}
+                            onClick={() => decide(r, 'decline')}
+                          >
+                            Decline
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
     </>
@@ -206,6 +254,7 @@ function OrdersList() {
   return (
     <AsyncView {...orders} onRetry={orders.reload} isEmpty={(d) => d.orders.length === 0} empty="No orders yet.">
       {(d) => (
+        <div className="table-wrap">
         <table>
           <thead>
             <tr>
@@ -219,13 +268,13 @@ function OrdersList() {
           <tbody>
             {d.orders.map((o) => (
               <tr key={o.id}>
-                <td>
+                <td className="wrap">
                   <Link to={`/paintings/${o.paintingId}`}>{o.paintingTitle}</Link>
                 </td>
                 <td>
                   {o.customerName}
-                  <br />
-                  <span className="muted">{o.customerEmail}</span>
+                  
+                  <span className="sub">{o.customerEmail}</span>
                 </td>
                 <td>{formatMoney(o.price)}</td>
                 <td>{formatDate(o.createdAt)}</td>
@@ -236,6 +285,7 @@ function OrdersList() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </AsyncView>
   );
@@ -247,7 +297,7 @@ function PaintingsManage() {
     <>
       <p>
         <Link className="button" to="/studio/paintings/new">
-          Add painting
+          + Add painting
         </Link>
       </p>
       <AsyncView
@@ -257,6 +307,7 @@ function PaintingsManage() {
         empty="No paintings yet."
       >
         {(d) => (
+          <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -282,7 +333,7 @@ function PaintingsManage() {
                   </td>
                   <td>
                     {p.status === 'available' ? (
-                      <Link className="button secondary" to={`/studio/paintings/${p.id}/edit`}>
+                      <Link className="button secondary small" to={`/studio/paintings/${p.id}/edit`}>
                         Edit
                       </Link>
                     ) : (
@@ -293,6 +344,7 @@ function PaintingsManage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </AsyncView>
     </>

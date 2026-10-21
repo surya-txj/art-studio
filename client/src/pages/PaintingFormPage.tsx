@@ -15,6 +15,7 @@ export function PaintingFormPage() {
 
   return (
     <section className="narrow">
+      <p className="eyebrow">Studio</p>
       <h1>{id ? 'Edit painting' : 'Add painting'}</h1>
       <AsyncView {...existing} onRetry={existing.reload}>
         {(p) =>
@@ -56,7 +57,7 @@ function PaintingForm({ existing }: { existing: Painting | null }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="form">
+    <form onSubmit={onSubmit} className="form panel">
       <label>
         Title
         <input value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} />
@@ -70,19 +71,19 @@ function PaintingForm({ existing }: { existing: Painting | null }) {
         <textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} rows={4} />
       </label>
       <label>
-        Price (INR, whole rupees)
+        <span>Price <span className="hint">INR, whole rupees</span></span>
         <input type="number" min={1} step={1} value={price} onChange={(e) => setPrice(e.target.value)} required />
       </label>
       <label>
-        Image URL <span className="muted">(optional; e.g. /images/p-001.jpg or https://…)</span>
+        <span>Image URL <span className="hint">optional · e.g. /images/p-001.jpg or https://…</span></span>
         <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} maxLength={500} />
       </label>
       {error && <ErrorBox message={error} />}
       <div className="row">
-        <button type="submit" disabled={submitting}>
+        <button type="submit" className="large" disabled={submitting}>
           {submitting ? 'Saving…' : existing ? 'Save changes' : 'Add painting'}
         </button>
-        <Link className="button secondary" to="/studio">
+        <Link className="button secondary large" to="/studio">
           Back to dashboard
         </Link>
       </div>

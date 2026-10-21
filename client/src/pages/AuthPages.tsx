@@ -41,8 +41,8 @@ export function LoginPage() {
   }
 
   return (
-    <section className="narrow">
-      <h1>Log in</h1>
+    <section className="auth-card panel">
+      <h1>Welcome back</h1>
       <form onSubmit={onSubmit} className="form">
         <label>
           Email
@@ -59,11 +59,11 @@ export function LoginPage() {
           />
         </label>
         {error && <ErrorBox message={error} />}
-        <button type="submit" disabled={submitting}>
+        <button type="submit" className="large" disabled={submitting}>
           {submitting ? 'Logging in…' : 'Log in'}
         </button>
       </form>
-      <p>
+      <p className="switch">
         New here? <Link to="/register">Create a customer account</Link>
       </p>
     </section>
@@ -94,8 +94,8 @@ export function RegisterPage() {
   }
 
   return (
-    <section className="narrow">
-      <h1>Create a customer account</h1>
+    <section className="auth-card panel">
+      <h1>Create your account</h1>
       <form onSubmit={onSubmit} className="form">
         <label>
           Name
@@ -106,7 +106,7 @@ export function RegisterPage() {
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
         </label>
         <label>
-          Password <span className="muted">(at least 8 characters)</span>
+          <span>Password <span className="hint">at least 8 characters</span></span>
           <input
             type="password"
             value={password}
@@ -117,11 +117,11 @@ export function RegisterPage() {
           />
         </label>
         {error && <ErrorBox message={error} />}
-        <button type="submit" disabled={submitting}>
+        <button type="submit" className="large" disabled={submitting}>
           {submitting ? 'Creating account…' : 'Sign up'}
         </button>
       </form>
-      <p>
+      <p className="switch">
         Already have an account? <Link to="/login">Log in</Link>
       </p>
     </section>

@@ -21,6 +21,7 @@ export function PotteryFormPage() {
 
   return (
     <section className="narrow">
+      <p className="eyebrow">Custom pottery</p>
       <h1>{editing ? 'Edit pottery request' : 'Request custom pottery'}</h1>
       <AsyncView {...data} onRetry={data.reload}>
         {(d) =>
@@ -86,58 +87,62 @@ function PotteryForm({
           {formatDate(created.neededBy)}. <Link to="/account">View my requests</Link>
         </Success>
       )}
-      <form onSubmit={onSubmit} className="form">
-        <label>
-          Item
-          <select value={itemId} onChange={(e) => setItemId(e.target.value)} required>
-            <option value="">Choose an item…</option>
-            {options.items.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Glaze
-          <select value={glazeId} onChange={(e) => setGlazeId(e.target.value)} required>
-            <option value="">Choose a glaze…</option>
-            {options.glazes.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Quantity ({rules.minQuantity}–{rules.maxQuantity})
-          <input
-            type="number"
-            min={rules.minQuantity}
-            max={rules.maxQuantity}
-            step={1}
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Needed by (on or after {formatDate(rules.earliestNeededBy)})
-          <input
-            type="date"
-            min={rules.earliestNeededBy}
-            value={neededBy}
-            onChange={(e) => setNeededBy(e.target.value)}
-            required
-          />
-        </label>
+      <form onSubmit={onSubmit} className="form panel">
+        <div className="form-grid">
+          <label>
+            Item
+            <select value={itemId} onChange={(e) => setItemId(e.target.value)} required>
+              <option value="">Choose an item…</option>
+              {options.items.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Glaze
+            <select value={glazeId} onChange={(e) => setGlazeId(e.target.value)} required>
+              <option value="">Choose a glaze…</option>
+              {options.glazes.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="form-grid">
+          <label>
+            <span>Quantity <span className="hint">{rules.minQuantity}–{rules.maxQuantity}</span></span>
+            <input
+              type="number"
+              min={rules.minQuantity}
+              max={rules.maxQuantity}
+              step={1}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            <span>Needed by <span className="hint">on or after {formatDate(rules.earliestNeededBy)}</span></span>
+            <input
+              type="date"
+              min={rules.earliestNeededBy}
+              value={neededBy}
+              onChange={(e) => setNeededBy(e.target.value)}
+              required
+            />
+          </label>
+        </div>
         {error && <ErrorBox message={error} />}
         <div className="row">
-          <button type="submit" disabled={submitting}>
+          <button type="submit" className="large" disabled={submitting}>
             {submitting ? 'Saving…' : existing ? 'Save changes' : 'Send request'}
           </button>
           {existing && (
-            <Link to="/account" className="button secondary">
+            <Link to="/account" className="button secondary large">
               Cancel editing
             </Link>
           )}

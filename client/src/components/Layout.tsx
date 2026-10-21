@@ -18,43 +18,59 @@ export function Layout() {
   return (
     <>
       <header className="topbar">
-        <Link to="/" className="brand">
-          Art Studio
-        </Link>
-        <nav aria-label="Main">
-          <NavLink to="/" end>
-            Paintings
-          </NavLink>
-          {user?.role === 'customer' && (
-            <>
-              <NavLink to="/wall-booking">Book a wall</NavLink>
-              <NavLink to="/pottery/new">Request pottery</NavLink>
-              <NavLink to="/account">My account</NavLink>
-            </>
-          )}
-          {user?.role === 'studio' && <NavLink to="/studio">Studio dashboard</NavLink>}
-        </nav>
-        <div className="session">
-          {user ? (
-            <>
-              <span className="muted">
-                {user.name} ({user.role})
-              </span>
-              <button type="button" className="secondary" onClick={handleLogout}>
-                Log out
-              </button>
-            </>
-          ) : (
-            <>
-              <NavLink to="/login">Log in</NavLink>
-              <NavLink to="/register">Sign up</NavLink>
-            </>
-          )}
+        <div className="topbar-inner">
+          <Link to="/" className="brand" aria-label="Art Studio home">
+            <span className="brand-mark" aria-hidden="true" />
+            <span className="brand-name">Art Studio</span>
+          </Link>
+          <nav aria-label="Main">
+            <NavLink to="/" end>
+              Paintings
+            </NavLink>
+            {user?.role === 'customer' && (
+              <>
+                <NavLink to="/wall-booking">Book a wall</NavLink>
+                <NavLink to="/pottery/new">Request pottery</NavLink>
+                <NavLink to="/account">My account</NavLink>
+              </>
+            )}
+            {user?.role === 'studio' && <NavLink to="/studio">Studio dashboard</NavLink>}
+          </nav>
+          <div className="session">
+            {user ? (
+              <>
+                <span className="user-chip">
+                  <span className="avatar" aria-hidden="true">
+                    {user.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span>
+                    {user.name} <span className="role-tag">· {user.role}</span>
+                  </span>
+                </span>
+                <button type="button" className="secondary small" onClick={handleLogout}>
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink to="/login">Log in</NavLink>
+                <Link to="/register" className="button small">
+                  Sign up
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
       <main>
         <Outlet />
       </main>
+      <footer className="footer">
+        <div className="footer-inner">
+          <span>Art Studio · Paintings, wall murals and handmade pottery</span>
+          <span>Prices in INR</span>
+        </div>
+      </footer>
     </>
   );
 }
